@@ -13,13 +13,26 @@ def UpdateDynamicIP(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Got update request for Dynamic IP")
 
     try:
-        IPv4 = ipaddress.IPv4Address(req.params.get('IPv4'))
+        IPv4 = ipaddress.IPv4Address(req.params.get('ipv4'))
     except ipaddress.AddressValueError:
-        logging.error(f"Got a non-valid IPv4 address: {req.params.get('IPv4')}")
+        logging.error(f"Got a non-valid IPv4 address: {req.params.get('ipv4')}")
+        returnBody = {"status": "error", "message": "Got invalid IPv4 address"}
+        return func.HttpResponse(
+             json.dumps(returnBody),
+             status_code=500,
+             mimetype="application/json",
+        )
+
     try:
-        IPv6 = ipaddress.IPv6Address(req.params.get('IPv6'))
+        IPv6 = ipaddress.IPv6Address(req.params.get('ipv6'))
     except ipaddress.AddressValueError:
-        logging.error(f"Got a non-valid IPv6 address: {req.params.get('IPv6')}")
+        logging.error(f"Got a non-valid IPv6 address: {req.params.get('ipv6')}")
+        returnBody = {"status": "error", "message": "Got invalid IPv6 address"}
+        return func.HttpResponse(
+             json.dumps(returnBody),
+             status_code=500,
+             mimetype="application/json",
+        )
 
     client = boto3.client(
         'route53',
@@ -39,7 +52,7 @@ def UpdateDynamicIP(req: func.HttpRequest) -> func.HttpResponse:
                             "TTL":  3600,
                             "ResourceRecords": [
                                 {
-                                    "Value": IPv4
+                                    "Value": str(IPv4)
                                 }
                             ]
                         }
@@ -61,7 +74,7 @@ def UpdateDynamicIP(req: func.HttpRequest) -> func.HttpResponse:
                             "TTL":  3600,
                             "ResourceRecords": [
                                 {
-                                    "Value": IPv6
+                                    "Value": str(IPv6)
                                 }
                             ]
                         }
